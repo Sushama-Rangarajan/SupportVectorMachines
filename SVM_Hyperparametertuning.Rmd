@@ -1,7 +1,6 @@
 ---
 title: "Support Vector Machines"
 author: "Sushama_Rangarajan"
-date: "9/7/2020"
 output:
   pdf_document: default
   html_document: default
