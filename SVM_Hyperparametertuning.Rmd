@@ -1,0 +1,229 @@
+---
+title: "Support Vector Machines"
+author: "Sushama_Rangarajan"
+date: "9/7/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+if(!require("pacman")) install.packages("pacman")
+pacman::p_load(e1071, ggplot2, caret, rmarkdown, corrplot)
+theme_set(theme_classic())
+```
+
+Reading the data and partitioning it with 80% train and 20% test
+
+```{r dataloading}
+j1 <- read.csv("juice.csv")
+j1$Purchase <- as.factor(j1$Purchase)
+```
+
+```{r Partitioning}
+set.seed(123)
+part <- createDataPartition(j1$Purchase, p=0.8, list = FALSE)
+j1.train <- j1[part,]
+j1.test <- j1[-part,]
+```
+
+# Linear Kernel with cost = 0.01
+
+```{r Linear SVM}
+svm1 <- svm(Purchase~., data=j1.train,kernel = "linear",cost=0.01,type = "C-classification")
+summary(svm1)
+```
+
+
+Predicting the test and train dataset with linear SVM 
+
+```{r Predicting with linear SVM}
+#prediction of test data
+
+pr1 <- predict(svm1,j1.test)
+conf.test <- table(Predicted = pr1, Actual = j1.test$Purchase)
+conf.test
+
+sensitivity(conf.test)
+specificity(conf.test)
+#Test Error rate
+(1- (sum(diag(conf.test)) / sum(conf.test)))
+
+#prediction of train data
+
+pr11 <- predict(svm1,j1.train)
+conf.train<- table(Predicted = pr11, Actual = j1.train$Purchase)
+conf.train
+
+#Train Error rate
+(1- (sum(diag(conf.train)) / sum(conf.train)))
+```
+
+
+
+Hyperparameter Tuning:
+
+```{r Tuning Linear model}
+
+set.seed(123)
+#sequence was modified after multiple iterations
+tune.linear <- tune(svm, Purchase ~.,data = j1.train, kernel = "linear", ranges = list(cost = seq(0.01,10.1,by=0.3)))
+summary(tune.linear)
+plot(tune.linear)
+best1 <- tune.linear$best.model
+summary(best1)
+```
+
+#Prediction:
+```{r Predicting with best linear model}
+#Prediction using test data
+bestpred1 <- predict(best1,j1.test)
+conf.test1 <- table(predicted = bestpred1, actual = j1.test$Purchase)
+conf.test1
+
+#Test Error rate
+(1- (sum(diag(conf.test1)) / sum(conf.test1)))
+
+#Prediction using train data
+bestpred2 <- predict(best1,j1.train)
+conf.train1 <- table(predicted = bestpred2, actual = j1.train$Purchase)
+conf.train1
+
+#Train Error rate
+(1- (sum(diag(conf.train1)) / sum(conf.train1)))
+
+```
+
+
+
+```{r Radial SVM}
+set.seed(123)
+svm2<- svm(Purchase~., data=j1.train, cost = 0.01)
+summary(svm2)
+```
+
+
+
+Prediction : 
+
+```{r Predicting with Radial SVM}
+#prediction using test data
+pr2 <- predict(svm2,j1.test)
+conf.test2 <- table(Predicted = pr2, Actual = j1.test$Purchase)
+conf.test2
+
+#Test Error rate
+(1- (sum(diag(conf.test2)) / sum(conf.test2)))
+
+#prediction using train data
+pr21 <- predict(svm2,j1.train)
+
+conf.train2<- table(Predicted = pr21, Actual = j1.train$Purchase)
+conf.train2
+
+#Train Error rate
+(1- (sum(diag(conf.train2)) / sum(conf.train2)))
+
+```
+
+Hyperparameter Tuning
+
+```{r Radial - Tuning}
+
+set.seed(123)
+#sequence was modified after multiple iterations
+tune.radial <- tune(svm, Purchase ~.,data = j1.train, kernel = "radial", ranges = list(cost = seq(0.01,10.1,by=1)))
+summary(tune.radial)
+plot(tune.radial)
+best2 <- tune.radial$best.model
+summary(best2)
+
+```
+
+
+Prediction
+```{r Predicting with Radial best model}
+#Prediction using test 
+bestpred2 <- predict(best2,j1.test)
+conf.test3 <- table(predicted = bestpred2, actual = j1.test$Purchase)
+conf.test3
+
+#Test Error rate
+(1- (sum(diag(conf.test3)) / sum(conf.test3)))
+
+#Prediction using train 
+bestpred3 <- predict(best2,j1.train)
+conf.train3 <- table(predicted = bestpred3, actual = j1.train$Purchase)
+conf.train3
+
+#Train Error rate
+(1- (sum(diag(conf.train3)) / sum(conf.train3)))
+
+```
+
+
+
+# Polynomial Kernel with degree =2 and cost = 0.01
+```{r Polynomial SVM}
+svm3<- svm(Purchase~., data=j1.train,kernel = "polynomial",degree = 2, cost = 0.01)
+summary(svm3)
+
+```
+
+
+```{r Predicting with Polynomial SVM}
+#Prediction using test 
+pr3 <- predict(svm3,j1.test)
+conf.test4 <- table(Predicted = pr3, Actual = j1.test$Purchase)
+conf.test4
+
+#Test Error rate
+(1- (sum(diag(conf.test4)) / sum(conf.test4)))
+
+#prediction of train data
+pr31 <- predict(svm3,j1.train)
+
+conf.train4<- table(Predicted = pr31, Actual = j1.train$Purchase)
+conf.train4
+
+#Train Error rate
+(1- (sum(diag(conf.train4)) / sum(conf.train4)))
+```
+
+
+Hyperparameter Tuning
+
+```{r Polynomial - Tuning}
+#Hyper parameter Tuning 
+set.seed(123)
+#sequence was modified after multiple iterations
+tune.poly <- tune(svm, Purchase ~.,data = j1.train, kernel = "polynomial", degree = 2, ranges = list(cost = seq(0.01,10.1,by=0.5)))
+summary(tune.poly)
+plot(tune.poly)
+best3 <- tune.poly$best.model
+summary(best3)
+```
+
+
+```{r Predicting with best polynomial model}
+#Prediction using test 
+bestpred4 <- predict(best3,j1.test)
+conf.test5 <- table(predicted = bestpred4, actual = j1.test$Purchase)
+conf.test5
+
+#Test Error rate
+(1- (sum(diag(conf.test5)) / sum(conf.test5)))
+
+#Prediction using train 
+bestpred5 <- predict(best3,j1.train)
+conf.train5 <- table(predicted = bestpred5, actual = j1.train$Purchase)
+conf.train5
+
+#Train Error rate
+(1- (sum(diag(conf.train5)) / sum(conf.train5)))
+
+```
+
+
+
+
